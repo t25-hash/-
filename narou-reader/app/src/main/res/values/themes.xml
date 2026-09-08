@@ -1,0 +1,6 @@
+<resources>
+    <style name="Theme.NarouReader" parent="Theme.AppCompat.DayNight.NoActionBar" />
+    <style name="Theme.NarouReader.NoAnim" parent="Theme.NarouReader">
+        <item name="android:windowAnimationStyle">@null</item>
+    </style>
+</resources>
