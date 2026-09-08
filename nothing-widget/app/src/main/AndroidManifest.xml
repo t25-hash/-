@@ -6,7 +6,7 @@
         android:allowBackup="true">
 
         <receiver
-            android:name=".NothingWidgetProvider"
+            android:name=".NothingWidgetReceiver"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
