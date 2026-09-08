@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Nothing Widget</string>
+    <string name="widget_placeholder">Nothing Widget — coming soon</string>
+    <string name="widget_description">Nothing Widget skeleton</string>
+</resources>
