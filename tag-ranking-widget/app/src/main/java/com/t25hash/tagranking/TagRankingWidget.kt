@@ -27,6 +27,10 @@ import androidx.glance.unit.ColorProvider
 
 private val urlParamKey = ActionParameters.Key<String>(MainActivity.EXTRA_URL)
 
+// Nothing OS の "Ndot" 風(ドットマトリクス的な間延びした大文字英字)を
+// Glanceのフォント指定なしで近似するための見出しテキスト。
+private const val HEADER_TITLE = "T A G  R A N K I N G"
+
 class TagRankingWidget : GlanceAppWidget() {
     override suspend fun provideGlance(context: Context, id: GlanceId) {
         val articles = RankingStore.cache(context)
@@ -45,7 +49,7 @@ private fun Content(articles: List<RankedArticle>) {
             .padding(8.dp),
     ) {
         Text(
-            text = "タグ別ランキング",
+            text = HEADER_TITLE,
             style = TextStyle(
                 color = ColorProvider(Color.White),
                 fontWeight = FontWeight.Bold,
