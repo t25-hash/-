@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.sp
+import androidx.glance.Alignment
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
 import androidx.glance.appwidget.GlanceAppWidget
@@ -14,6 +15,7 @@ import androidx.glance.layout.Box
 import androidx.glance.layout.fillMaxSize
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
+import androidx.glance.text.TextAlign
 import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
 
@@ -31,6 +33,7 @@ private fun Content() {
         modifier = GlanceModifier
             .fillMaxSize()
             .background(Color.Black),
+        contentAlignment = Alignment.Center,
     ) {
         Text(
             text = "NOTHING WIDGET",
@@ -38,6 +41,7 @@ private fun Content() {
                 color = ColorProvider(Color.White),
                 fontWeight = FontWeight.Bold,
                 fontSize = 13.sp,
+                textAlign = TextAlign.Center,
             ),
         )
     }
