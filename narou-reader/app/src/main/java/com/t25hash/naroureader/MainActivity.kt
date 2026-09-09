@@ -1,10 +1,15 @@
 package com.t25hash.naroureader
 
 import android.os.Bundle
+import android.view.KeyEvent
+import android.view.inputmethod.EditorInfo
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import android.widget.Button
+import android.widget.EditText
 import androidx.appcompat.app.AppCompatActivity
+import java.net.URLEncoder
 
 class MainActivity : AppCompatActivity() {
 
@@ -15,12 +20,14 @@ class MainActivity : AppCompatActivity() {
 
     private val startUrl = "https://ncode.syosetu.com/"
 
+    private lateinit var webView: WebView
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         overridePendingTransition(0, 0)
 
-        val webView = findViewById<WebView>(R.id.webview)
+        webView = findViewById(R.id.webview)
         webView.settings.javaScriptEnabled = true
         webView.settings.domStorageEnabled = true
 
@@ -43,12 +50,43 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+        val omnibox = findViewById<EditText>(R.id.omnibox)
+        val goButton = findViewById<Button>(R.id.go_button)
+
+        val submit = {
+            val input = omnibox.text.toString().trim()
+            if (input.isNotEmpty()) {
+                webView.loadUrl(resolveInput(input))
+            }
+        }
+
+        goButton.setOnClickListener { submit() }
+        omnibox.setOnEditorActionListener { _, actionId, event ->
+            val isGo = actionId == EditorInfo.IME_ACTION_GO ||
+                (event?.keyCode == KeyEvent.KEYCODE_ENTER && event.action == KeyEvent.ACTION_DOWN)
+            if (isGo) submit()
+            isGo
+        }
+
         webView.loadUrl(startUrl)
+    }
+
+    private fun resolveInput(input: String): String {
+        return when {
+            input.startsWith("http://") || input.startsWith("https://") -> input
+            allowedHosts.any { input.contains(it) } -> "https://$input"
+            else -> {
+                // キーワードはなろうの検索にフォールバック
+                // (カクヨムの検索URLパターンは未確認のため未対応。
+                //  カクヨムを開きたい場合はURLを直接貼り付けること。)
+                val encoded = URLEncoder.encode(input, "UTF-8")
+                "https://yomou.syosetu.com/search.php?word=$encoded"
+            }
+        }
     }
 
     @Suppress("DEPRECATION")
     override fun onBackPressed() {
-        val webView = findViewById<WebView>(R.id.webview)
         if (webView.canGoBack()) {
             webView.goBack()
         } else {
