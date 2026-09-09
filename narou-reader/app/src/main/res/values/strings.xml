@@ -2,4 +2,9 @@
     <string name="app_name">Narou Reader</string>
     <string name="omnibox_hint">URL または キーワード</string>
     <string name="omnibox_go">開く</string>
+    <string name="bookmark_button">しおり</string>
+    <string name="bookshelf_widget_description">しおり一覧ウィジェット</string>
+    <string name="bookshelf_loading">読み込み中…</string>
+    <string name="bookshelf_empty">しおりはまだありません</string>
+    <string name="bookshelf_title">本棚</string>
 </resources>

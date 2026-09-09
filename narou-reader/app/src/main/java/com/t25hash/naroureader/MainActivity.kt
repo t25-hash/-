@@ -9,9 +9,15 @@ import android.webkit.WebViewClient
 import android.widget.Button
 import android.widget.EditText
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
 import java.net.URLEncoder
 
 class MainActivity : AppCompatActivity() {
+
+    companion object {
+        const val EXTRA_URL = "bookmark_url"
+    }
 
     private val allowedHosts = listOf(
         "syosetu.com",
@@ -52,6 +58,7 @@ class MainActivity : AppCompatActivity() {
 
         val omnibox = findViewById<EditText>(R.id.omnibox)
         val goButton = findViewById<Button>(R.id.go_button)
+        val bookmarkButton = findViewById<Button>(R.id.bookmark_button)
 
         val submit = {
             val input = omnibox.text.toString().trim()
@@ -68,7 +75,18 @@ class MainActivity : AppCompatActivity() {
             isGo
         }
 
-        webView.loadUrl(startUrl)
+        bookmarkButton.setOnClickListener {
+            val url = webView.url
+            if (url != null) {
+                BookmarkStore.add(this, url, webView.title ?: url)
+                lifecycleScope.launch {
+                    BookshelfWidget().updateAll(this@MainActivity)
+                }
+            }
+        }
+
+        val initialUrl = intent.getStringExtra(EXTRA_URL) ?: startUrl
+        webView.loadUrl(initialUrl)
     }
 
     private fun resolveInput(input: String): String {
