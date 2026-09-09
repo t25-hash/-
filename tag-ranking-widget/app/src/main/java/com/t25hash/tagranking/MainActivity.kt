@@ -1,5 +1,7 @@
 package com.t25hash.tagranking
 
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.text.format.DateFormat
 import android.widget.Button
@@ -9,8 +11,21 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 
 class MainActivity : AppCompatActivity() {
+
+    companion object {
+        const val EXTRA_URL = "open_url"
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        val urlToOpen = intent.getStringExtra(EXTRA_URL)
+        if (urlToOpen != null) {
+            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(urlToOpen)))
+            finish()
+            return
+        }
+
         setContentView(R.layout.activity_main)
 
         val tagsInput = findViewById<EditText>(R.id.tags_input)

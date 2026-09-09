@@ -1,14 +1,14 @@
 package com.t25hash.tagranking
 
 import android.content.Context
-import android.content.Intent
-import android.net.Uri
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
+import androidx.glance.action.ActionParameters
+import androidx.glance.action.actionParametersOf
 import androidx.glance.action.actionStartActivity
 import androidx.glance.action.clickable
 import androidx.glance.appwidget.GlanceAppWidget
@@ -24,6 +24,8 @@ import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
+
+private val urlParamKey = ActionParameters.Key<String>(MainActivity.EXTRA_URL)
 
 class TagRankingWidget : GlanceAppWidget() {
     override suspend fun provideGlance(context: Context, id: GlanceId) {
@@ -63,16 +65,17 @@ private fun Content(articles: List<RankedArticle>) {
                         style = TextStyle(color = ColorProvider(Color.White), fontSize = 12.sp),
                         modifier = GlanceModifier
                             .padding(vertical = 4.dp)
-                            .clickable(actionStartActivity(openUrlIntent(article.url))),
+                            .clickable(
+                                actionStartActivity<MainActivity>(
+                                    actionParametersOf(urlParamKey to article.url),
+                                ),
+                            ),
                     )
                 }
             }
         }
     }
 }
-
-private fun openUrlIntent(url: String): Intent =
-    Intent(Intent.ACTION_VIEW, Uri.parse(url))
 
 class TagRankingWidgetReceiver : GlanceAppWidgetReceiver() {
     override val glanceAppWidget: GlanceAppWidget = TagRankingWidget()

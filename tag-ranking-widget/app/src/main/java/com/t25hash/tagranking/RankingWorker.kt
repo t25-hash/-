@@ -1,6 +1,7 @@
 package com.t25hash.tagranking
 
 import android.content.Context
+import androidx.glance.appwidget.updateAll
 import androidx.work.Constraints
 import androidx.work.CoroutineWorker
 import androidx.work.ExistingPeriodicWorkPolicy
