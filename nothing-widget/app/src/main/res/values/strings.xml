@@ -5,4 +5,6 @@
     <string name="memo_hint">メモを書く</string>
     <string name="share_button">共有</string>
     <string name="cancel_button">閉じる</string>
+    <string name="webhook_hint">Discord Webhook URL(貼ると投稿ボタンが使えます)</string>
+    <string name="discord_post_button">Discordに投稿</string>
 </resources>
