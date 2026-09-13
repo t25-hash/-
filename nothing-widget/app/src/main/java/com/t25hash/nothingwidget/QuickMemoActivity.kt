@@ -2,6 +2,8 @@ package com.t25hash.nothingwidget
 
 import android.content.Intent
 import android.os.Bundle
+import android.view.Gravity
+import android.view.WindowManager
 import android.widget.Button
 import android.widget.EditText
 import androidx.appcompat.app.AppCompatActivity
@@ -19,6 +21,11 @@ class QuickMemoActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_quick_memo)
+
+        // 画面全体を覆う暗いオーバーレイなしで、上部にだけ黒帯が出るようにする。
+        window.setLayout(WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.WRAP_CONTENT)
+        window.setGravity(Gravity.TOP)
+        window.setBackgroundDrawableResource(android.R.color.transparent)
 
         val memoInput = findViewById<EditText>(R.id.memo_input)
         val shareButton = findViewById<Button>(R.id.share_button)

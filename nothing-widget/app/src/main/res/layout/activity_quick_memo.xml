@@ -4,7 +4,9 @@
     android:layout_height="wrap_content"
     android:orientation="vertical"
     android:background="#000000"
-    android:padding="16dp">
+    android:paddingHorizontal="16dp"
+    android:paddingTop="48dp"
+    android:paddingBottom="16dp">
 
     <EditText
         android:id="@+id/memo_input"
