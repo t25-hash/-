@@ -4,9 +4,4 @@
     <string name="widget_description">Nothing Widget skeleton (Glance)</string>
     <string name="memo_hint">メモを書く</string>
     <string name="share_button">共有</string>
-    <string name="discord_post_button">Discordに投稿</string>
-    <string name="webhook_hint">Discord Webhook URL</string>
-    <string name="webhook_dialog_title">Discord Webhook URLを設定</string>
-    <string name="dialog_save">保存</string>
-    <string name="dialog_cancel">キャンセル</string>
 </resources>
