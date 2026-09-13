@@ -1,7 +1,5 @@
 package com.t25hash.nothingwidget
 
-import android.appwidget.AppWidgetManager
-import android.content.ComponentName
 import android.content.Intent
 import android.graphics.Typeface
 import android.os.Bundle
@@ -10,6 +8,10 @@ import android.view.WindowManager
 import android.widget.EditText
 import android.widget.ImageButton
 import androidx.appcompat.app.AppCompatActivity
+import androidx.glance.appwidget.updateAll
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 /**
  * ウィジェットタップで開く「パパっとメモ」画面。メモ帳アプリのように、
@@ -57,7 +59,11 @@ class QuickMemoActivity : AppCompatActivity() {
             if (text != lastSavedText) {
                 MemoStore.addMemo(this, text)
                 lastSavedText = text
-                requestWidgetUpdate()
+                // Glance公式の更新API。ウィジェットの再描画は別プロセスなので、
+                // この呼び出しなしでは保存内容が画面上に反映されない。
+                CoroutineScope(Dispatchers.Main).launch {
+                    NothingWidget().updateAll(this@QuickMemoActivity)
+                }
             }
 
             val sendIntent = Intent(Intent.ACTION_SEND).apply {
@@ -68,18 +74,5 @@ class QuickMemoActivity : AppCompatActivity() {
             // ここでfinish()しない: 同じメモを複数の宛先へ続けて共有できるように
             // するため。閉じるのは戻る操作で。
         }
-    }
-
-    /** ウィジェット本体(黒い箱)に最新のメモを反映させる。 */
-    private fun requestWidgetUpdate() {
-        val manager = AppWidgetManager.getInstance(application)
-        val component = ComponentName(application, NothingWidgetReceiver::class.java)
-        val ids = manager.getAppWidgetIds(component)
-        if (ids.isEmpty()) return
-        val updateIntent = Intent(this, NothingWidgetReceiver::class.java).apply {
-            action = AppWidgetManager.ACTION_APPWIDGET_UPDATE
-            putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, ids)
-        }
-        sendBroadcast(updateIntent)
     }
 }
