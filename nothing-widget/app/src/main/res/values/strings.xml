@@ -2,4 +2,7 @@
     <string name="app_name">Nothing Widget</string>
     <string name="widget_loading">Loading…</string>
     <string name="widget_description">Nothing Widget skeleton (Glance)</string>
+    <string name="memo_hint">メモを書く</string>
+    <string name="share_button">共有</string>
+    <string name="cancel_button">閉じる</string>
 </resources>

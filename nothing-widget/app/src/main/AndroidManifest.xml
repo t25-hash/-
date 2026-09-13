@@ -5,6 +5,12 @@
         android:label="@string/app_name"
         android:allowBackup="true">
 
+        <activity
+            android:name=".QuickMemoActivity"
+            android:exported="true"
+            android:theme="@style/Theme.AppCompat.Dialog"
+            android:windowSoftInputMode="stateVisible" />
+
         <receiver
             android:name=".NothingWidgetReceiver"
             android:exported="true">
