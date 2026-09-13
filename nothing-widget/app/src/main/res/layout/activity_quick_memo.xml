@@ -1,59 +1,49 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical"
-    android:background="#000000"
-    android:paddingHorizontal="16dp"
-    android:paddingTop="48dp"
-    android:paddingBottom="16dp">
+    android:background="#000000">
 
     <EditText
         android:id="@+id/memo_input"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:minLines="3"
+        android:minLines="4"
         android:gravity="top|start"
+        android:background="@android:color/transparent"
+        android:paddingHorizontal="16dp"
+        android:paddingTop="48dp"
+        android:paddingBottom="16dp"
         android:hint="@string/memo_hint"
         android:textColorHint="#888888"
         android:textColor="#FFFFFF"
         android:inputType="textMultiLine|textCapSentences" />
 
-    <EditText
-        android:id="@+id/webhook_input"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:singleLine="true"
-        android:hint="@string/webhook_hint"
-        android:textColorHint="#666666"
-        android:textColor="#CCCCCC"
-        android:textSize="12sp"
-        android:inputType="textUri" />
-
     <LinearLayout
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_gravity="top|end"
         android:orientation="horizontal"
-        android:gravity="end"
-        android:paddingTop="8dp">
+        android:paddingTop="8dp"
+        android:paddingEnd="8dp">
 
-        <Button
-            android:id="@+id/cancel_button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/cancel_button" />
+        <ImageButton
+            android:id="@+id/discord_button"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:background="@android:color/transparent"
+            android:src="@android:drawable/ic_menu_send"
+            android:tint="#FFFFFF"
+            android:contentDescription="@string/discord_post_button" />
 
-        <Button
-            android:id="@+id/discord_post_button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/discord_post_button" />
-
-        <Button
+        <ImageButton
             android:id="@+id/share_button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/share_button" />
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:layout_marginStart="4dp"
+            android:background="@android:color/transparent"
+            android:src="@android:drawable/ic_menu_share"
+            android:tint="#FFFFFF"
+            android:contentDescription="@string/share_button" />
     </LinearLayout>
-</LinearLayout>
+</FrameLayout>
