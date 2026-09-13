@@ -1,6 +1,9 @@
 package com.t25hash.nothingwidget
 
+import android.appwidget.AppWidgetManager
+import android.content.ComponentName
 import android.content.Intent
+import android.graphics.Typeface
 import android.os.Bundle
 import android.view.Gravity
 import android.view.WindowManager
@@ -19,6 +22,11 @@ import androidx.appcompat.app.AppCompatActivity
  * 丸投げする。Essential SpaceやAIアプリなど、端末にインストールされていてテキスト共有を
  * 受け取れるアプリはすべて宛先候補としてシェアシートに出てくる(このアプリ側で宛先を
  * 個別対応する必要はない)。
+ *
+ * フォントはアプリ・ウィジェット共通でMonospace(等幅)に統一している。
+ * ウィジェット側は別プロセス描画(RemoteViews/Glance)のためカスタムフォントを
+ * 読み込めず、Glance標準のFontFamily.Monospaceしか使えない制約があるため、
+ * こちらの画面もそれに合わせている。
  */
 class QuickMemoActivity : AppCompatActivity() {
 
@@ -34,9 +42,13 @@ class QuickMemoActivity : AppCompatActivity() {
         val memoInput = findViewById<EditText>(R.id.memo_input)
         val shareButton = findViewById<ImageButton>(R.id.share_button)
 
-        memoInput.requestFocus()
+        memoInput.typeface = Typeface.MONOSPACE
 
-        var lastSavedText: String? = null
+        // 直近に保存したメモを下書きとして復元する(ウィジェット本体にも同じ内容が出ている)。
+        var lastSavedText: String? = MemoStore.lastText(this)
+        memoInput.setText(lastSavedText ?: "")
+        memoInput.setSelection(memoInput.text.length)
+        memoInput.requestFocus()
 
         shareButton.setOnClickListener {
             val text = memoInput.text.toString().trim()
@@ -45,6 +57,7 @@ class QuickMemoActivity : AppCompatActivity() {
             if (text != lastSavedText) {
                 MemoStore.addMemo(this, text)
                 lastSavedText = text
+                requestWidgetUpdate()
             }
 
             val sendIntent = Intent(Intent.ACTION_SEND).apply {
@@ -55,5 +68,18 @@ class QuickMemoActivity : AppCompatActivity() {
             // ここでfinish()しない: 同じメモを複数の宛先へ続けて共有できるように
             // するため。閉じるのは戻る操作で。
         }
+    }
+
+    /** ウィジェット本体(黒い箱)に最新のメモを反映させる。 */
+    private fun requestWidgetUpdate() {
+        val manager = AppWidgetManager.getInstance(application)
+        val component = ComponentName(application, NothingWidgetReceiver::class.java)
+        val ids = manager.getAppWidgetIds(component)
+        if (ids.isEmpty()) return
+        val updateIntent = Intent(this, NothingWidgetReceiver::class.java).apply {
+            action = AppWidgetManager.ACTION_APPWIDGET_UPDATE
+            putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, ids)
+        }
+        sendBroadcast(updateIntent)
     }
 }
