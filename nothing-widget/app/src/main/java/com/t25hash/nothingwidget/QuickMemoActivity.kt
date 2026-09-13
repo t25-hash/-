@@ -11,7 +11,7 @@ import androidx.appcompat.app.AppCompatActivity
 /**
  * ウィジェットタップで開く「パパっとメモ」画面。
  * ホーム画面ウィジェット自体はテキスト入力欄を持てない(RemoteViews/Glanceの制約)ため、
- * ダイアログ風の透過テーマでこのActivityを一瞬だけ開き、共有はOS標準のシェアシート
+ * 透過テーマでこのActivityを一瞬だけ開き、共有はOS標準のシェアシート
  * (ACTION_SEND)に丸投げする。Essential SpaceやAIアプリなど、端末にインストールされていて
  * テキスト共有を受け取れるアプリはすべて宛先候補としてシェアシートに出てくる
  * (このアプリ側で宛先を個別対応する必要はない)。
@@ -33,16 +33,24 @@ class QuickMemoActivity : AppCompatActivity() {
 
         memoInput.requestFocus()
 
+        var lastSavedText: String? = null
+
         shareButton.setOnClickListener {
             val text = memoInput.text.toString().trim()
-            if (text.isNotEmpty()) {
-                val sendIntent = Intent(Intent.ACTION_SEND).apply {
-                    type = "text/plain"
-                    putExtra(Intent.EXTRA_TEXT, text)
-                }
-                startActivity(Intent.createChooser(sendIntent, null))
+            if (text.isEmpty()) return@setOnClickListener
+
+            if (text != lastSavedText) {
+                MemoStore.addMemo(this, text)
+                lastSavedText = text
             }
-            finish()
+
+            val sendIntent = Intent(Intent.ACTION_SEND).apply {
+                type = "text/plain"
+                putExtra(Intent.EXTRA_TEXT, text)
+            }
+            startActivity(Intent.createChooser(sendIntent, null))
+            // ここでfinish()しない: 同じメモをEssential Space・AIアプリなど
+            // 複数の宛先へ続けて共有できるようにするため。閉じるのはユーザー操作で。
         }
 
         cancelButton.setOnClickListener {
