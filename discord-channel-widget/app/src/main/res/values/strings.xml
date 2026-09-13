@@ -1,0 +1,14 @@
+<resources>
+    <string name="app_name">Discord Channel Widget</string>
+    <string name="token_label">Botトークン(他人に見せないこと)</string>
+    <string name="token_hint">Discord Developer PortalのBot Token</string>
+    <string name="channel_label">チャンネルID</string>
+    <string name="channel_hint">例: 123456789012345678</string>
+    <string name="guild_label">サーバーID(タップで開く用・任意)</string>
+    <string name="guild_hint">空欄でも動作します</string>
+    <string name="save_button">保存</string>
+    <string name="refresh_button">今すぐ更新</string>
+    <string name="widget_empty">まだメッセージがありません</string>
+    <string name="widget_loading">読み込み中…</string>
+    <string name="widget_description">Discordの特定チャンネルを表示するウィジェット</string>
+</resources>
