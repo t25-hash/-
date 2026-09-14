@@ -25,9 +25,13 @@ import kotlinx.coroutines.launch
  *
  * ホーム画面ウィジェット自体はテキスト入力欄を持てない(RemoteViews/Glanceの制約)ため、
  * 透過テーマでこのActivityを一瞬だけ開く。共有はOS標準のシェアシート(ACTION_SEND)に
- * 丸投げする。Essential SpaceやAIアプリなど、端末にインストールされていてテキスト共有を
- * 受け取れるアプリはすべて宛先候補としてシェアシートに出てくる(このアプリ側で宛先を
- * 個別対応する必要はない)。
+ * 丸投げする。
+ *
+ * このActivity自体もACTION_SEND(text/plain)の受け口として登録されている。
+ * Perplexity/ChatGPT等の共有ボタンからこのアプリが選ばれた場合は、通常の
+ * メモ編集UIを出さず、そのテキストをそのままAiLogStoreに追記して閉じるだけの
+ * 「AIログ取り」モードとして動く(バックグラウンドでのクリップボード監視は
+ * Android 10以降できないため、共有経由で受け取る方式にしている)。
  *
  * 「一括送信」は、チェックしたAIアプリ(Perplexity/Genspark/DeepSeek/Grok)へ
  * 同じ文章を順番にstartActivityする。各アプリの共有/入力画面自体は毎回
@@ -41,6 +45,17 @@ class QuickMemoActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        if (intent?.action == Intent.ACTION_SEND && intent.type == "text/plain") {
+            val sharedText = intent.getStringExtra(Intent.EXTRA_TEXT)
+            if (!sharedText.isNullOrBlank()) {
+                AiLogStore.append(this, sharedText)
+                Toast.makeText(this, "AIログに追記しました", Toast.LENGTH_SHORT).show()
+            }
+            finish()
+            return
+        }
+
         setContentView(R.layout.activity_quick_memo)
 
         // 画面全体を覆う暗いオーバーレイなしで、上部にだけ黒帯が出るようにする。
@@ -51,6 +66,7 @@ class QuickMemoActivity : AppCompatActivity() {
         val memoInput = findViewById<EditText>(R.id.memo_input)
         val shareButton = findViewById<ImageButton>(R.id.share_button)
         val bulkSendButton = findViewById<ImageButton>(R.id.bulk_send_button)
+        val viewLogButton = findViewById<ImageButton>(R.id.view_log_button)
 
         memoInput.typeface = Typeface.MONOSPACE
 
@@ -106,6 +122,10 @@ class QuickMemoActivity : AppCompatActivity() {
                 }
                 .setNegativeButton("キャンセル", null)
                 .show()
+        }
+
+        viewLogButton.setOnClickListener {
+            startActivity(Intent(this, AiLogViewActivity::class.java))
         }
     }
 
