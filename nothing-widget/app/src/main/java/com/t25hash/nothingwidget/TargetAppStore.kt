@@ -14,7 +14,20 @@ object TargetAppStore {
     private const val PREFS = "quick_memo"
     private const val KEY_TARGETS = "send_targets"
 
-    val SLOT_LABELS = listOf("Perplexity", "Genspark", "DeepSeek", "Grok")
+    val SLOT_LABELS = listOf(
+        "Perplexity",
+        "Genspark",
+        "DeepSeek",
+        "Grok",
+        "Gemini",
+        "ChatGPT",
+        "Claude",
+        "Copilot",
+        "Meta AI",
+        "Poe",
+        "Qwen",
+        "Kimi",
+    )
 
     fun component(context: Context, label: String): ComponentName? {
         val obj = allComponents(context).optJSONObject(label) ?: return null
