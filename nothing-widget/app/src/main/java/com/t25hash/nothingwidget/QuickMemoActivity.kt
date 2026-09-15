@@ -3,7 +3,9 @@ package com.t25hash.nothingwidget
 import android.app.AlertDialog
 import android.app.PendingIntent
 import android.content.ActivityNotFoundException
+import android.content.ComponentName
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.Typeface
 import android.os.Bundle
 import android.view.Gravity
@@ -33,11 +35,12 @@ import kotlinx.coroutines.launch
  * 「AIログ取り」モードとして動く(バックグラウンドでのクリップボード監視は
  * Android 10以降できないため、共有経由で受け取る方式にしている)。
  *
- * 「一括送信」は、チェックしたAIアプリ(Perplexity/Genspark/DeepSeek/Grok)へ
- * 同じ文章を順番にstartActivityする。各アプリの共有/入力画面自体は毎回
- * ユーザーがそのアプリ内で送信を押す必要がある(Androidの仕様上、他アプリへの
- * 送信を裏側で自動完了させることはできない)。送信先アプリはパッケージ名を
- * 決め打ちせず、初回だけ共有シートから選んでもらいTargetAppStoreに記憶する。
+ * 「一括送信」は、チェックしたAIアプリへ同じ文章を送る。登録済み(ComponentName確定)の
+ * アプリはstartActivities()で1回のシステムコールにまとめる。未登録のアプリが残っている
+ * 回は一括起動せず、chooserを1個だけ出して登録を済ませる。startActivity()を間を置かず
+ * 連続で呼ぶと、2回目以降が「バックグラウンドからの起動」と判定されて無視されることが
+ * あるため(Android 10以降の制限)、連続呼び出し自体を無くす設計にしている。
+ * 各アプリ内で送信を押すのはユーザー自身(裏側で自動完了させることはAndroidの仕様上不可能)。
  *
  * フォントはアプリ・ウィジェット共通でMonospace(等幅)に統一している。
  */
@@ -116,9 +119,7 @@ class QuickMemoActivity : AppCompatActivity() {
                 .setTitle("一括送信するアプリを選択")
                 .setMultiChoiceItems(labels, checked) { _, which, isChecked -> checked[which] = isChecked }
                 .setPositiveButton("送信") { _, _ ->
-                    labels.forEachIndexed { index, label ->
-                        if (checked[index]) sendToSlot(label, text)
-                    }
+                    bulkSend(labels.filterIndexed { index, _ -> checked[index] }, text)
                 }
                 .setNegativeButton("キャンセル", null)
                 .show()
@@ -129,23 +130,66 @@ class QuickMemoActivity : AppCompatActivity() {
         }
     }
 
-    /** 指定スロットのアプリへ送る。未登録なら共有シートを開いて選んでもらい、以後はそこへ記憶する。 */
-    private fun sendToSlot(label: String, text: String) {
+    /**
+     * 一括送信。全スロットが登録済みなら startActivities() 1回で送る。
+     * 未登録が残っている回は一括起動せず、chooserを1個だけ出して登録を済ませる
+     * (chooserをN個連続で開くと、2個目以降が無視されることがあるため)。
+     */
+    private fun bulkSend(labels: List<String>, text: String) {
+        val resolved = mutableListOf<ComponentName>()
+        val unresolved = mutableListOf<String>()
+        labels.forEach { label ->
+            val component = TargetAppStore.component(this, label)
+            if (component != null && isLaunchable(component)) resolved += component else unresolved += label
+        }
+
+        if (unresolved.isNotEmpty()) {
+            val label = unresolved.first()
+            Toast.makeText(this, "未登録: ${label}を登録します(残り${unresolved.size}件)", Toast.LENGTH_SHORT).show()
+            registerSlot(label, text)
+            return
+        }
+
+        if (resolved.isEmpty()) return
+
+        // startActivities()は配列の最後だけが即座に前面に出て、残りは戻る操作で
+        // 順に現れる。なので逆順に渡すと、戻るたびに次のアプリへ進む流れになる。
+        // FLAG_ACTIVITY_NEW_TASKは付けない: Activityから呼ぶ場合は不要で、付けると
+        // 各アプリが別タスクに分かれて上記の流れが壊れる。
+        val intents = resolved.reversed().map { component ->
+            Intent(Intent.ACTION_SEND).apply {
+                type = "text/plain"
+                putExtra(Intent.EXTRA_TEXT, text)
+                setComponent(component)
+            }
+        }.toTypedArray()
+
+        try {
+            startActivities(intents)
+        } catch (e: ActivityNotFoundException) {
+            // 生存確認の直後にアンインストールされた等。
+            Toast.makeText(this, "起動できないアプリがありました", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    /**
+     * startActivities()は配列のうち1つでも解決できないと全体が例外になり、
+     * しかもスタックの状態が未定義になる(Context#startActivitiesのJavadoc)。
+     * そのため配列へ入れる前に1件ずつ生存確認する。
+     */
+    private fun isLaunchable(component: ComponentName): Boolean = try {
+        packageManager.getActivityInfo(component, 0)
+        true
+    } catch (e: PackageManager.NameNotFoundException) {
+        false
+    }
+
+    /** 未登録スロットを1個だけchooserで解決させる(選ばれた先はChosenComponentReceiverが保存する)。 */
+    private fun registerSlot(label: String, text: String) {
         val sendIntent = Intent(Intent.ACTION_SEND).apply {
             type = "text/plain"
             putExtra(Intent.EXTRA_TEXT, text)
         }
-
-        val registered = TargetAppStore.component(this, label)
-        if (registered != null) {
-            try {
-                startActivity(Intent(sendIntent).setComponent(registered))
-                return
-            } catch (e: ActivityNotFoundException) {
-                // 登録済みアプリが見つからない(アンインストール等) → 選び直してもらう
-            }
-        }
-
         val receiverIntent = Intent(this, ChosenComponentReceiver::class.java).apply {
             putExtra(ChosenComponentReceiver.EXTRA_SLOT_LABEL, label)
         }
@@ -155,7 +199,8 @@ class QuickMemoActivity : AppCompatActivity() {
             receiverIntent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE,
         )
-        val chooser = Intent.createChooser(sendIntent, "${label}として使うアプリを選択", pendingIntent.intentSender)
-        startActivity(chooser)
+        startActivity(
+            Intent.createChooser(sendIntent, "${label}として使うアプリを選択", pendingIntent.intentSender),
+        )
     }
 }
