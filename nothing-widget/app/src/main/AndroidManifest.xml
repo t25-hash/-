@@ -2,10 +2,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <!--
-      登録済み送信先の生存確認(PackageManager#getActivityInfo)がAndroid 11以降の
-      パッケージ可視性フィルタで誤って「存在しない」と判定されないよう、text/plainの
-      共有先アプリを可視にする。startActivities()は1つでも解決できないと配列全体が
-      失敗するため、この事前確認が必須。
+      登録済み送信先の生存確認(PackageManager#getActivityInfo)がAndroid 11以降のパッケージ
+      可視性フィルタで誤って「存在しない」と判定されないよう、text/plainの共有先アプリを
+      可視にする。startActivities()は1つでも解決できないと配列全体が失敗するため、
+      この事前確認が必須。
     -->
     <queries>
         <intent>
@@ -16,6 +16,7 @@
 
     <application
         android:label="@string/app_name"
+        android:icon="@mipmap/ic_launcher"
         android:allowBackup="true">
 
         <activity

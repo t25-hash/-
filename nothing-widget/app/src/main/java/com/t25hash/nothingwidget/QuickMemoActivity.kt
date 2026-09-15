@@ -38,7 +38,7 @@ import kotlinx.coroutines.launch
  * 「一括送信」は、チェックしたAIアプリへ同じ文章を送る。登録済み(ComponentName確定)の
  * アプリはstartActivities()で1回のシステムコールにまとめる。未登録のアプリが残っている
  * 回は一括起動せず、chooserを1個だけ出して登録を済ませる。startActivity()を間を置かず
- * 連続で呼ぶと、2回目以降が「バックグラウンドからの起動」と判定されて無視されることが
+ * 連続で呼ぶと2回目以降が「バックグラウンドからの起動」と判定されて無視されることが
  * あるため(Android 10以降の制限)、連続呼び出し自体を無くす設計にしている。
  * 各アプリ内で送信を押すのはユーザー自身(裏側で自動完了させることはAndroidの仕様上不可能)。
  *
@@ -131,9 +131,9 @@ class QuickMemoActivity : AppCompatActivity() {
     }
 
     /**
-     * 一括送信。全スロットが登録済みなら startActivities() 1回で送る。
+     * 一括送信。全スロットが登録済みならstartActivities()1回で送る。
      * 未登録が残っている回は一括起動せず、chooserを1個だけ出して登録を済ませる
-     * (chooserをN個連続で開くと、2個目以降が無視されることがあるため)。
+     * (chooserをN個連続で開くと2個目以降が無視されることがあるため)。
      */
     private fun bulkSend(labels: List<String>, text: String) {
         val resolved = mutableListOf<ComponentName>()
@@ -152,10 +152,10 @@ class QuickMemoActivity : AppCompatActivity() {
 
         if (resolved.isEmpty()) return
 
-        // startActivities()は配列の最後だけが即座に前面に出て、残りは戻る操作で
-        // 順に現れる。なので逆順に渡すと、戻るたびに次のアプリへ進む流れになる。
-        // FLAG_ACTIVITY_NEW_TASKは付けない: Activityから呼ぶ場合は不要で、付けると
-        // 各アプリが別タスクに分かれて上記の流れが壊れる。
+        // startActivities()は配列の最後だけが即座に前面へ出て、残りは戻る操作で順に現れる。
+        // なので逆順で渡すと、戻るたびに次のアプリへ進む流れになる。
+        // FLAG_ACTIVITY_NEW_TASKは付けない: Activityから呼ぶ場合は不要で、付けると各アプリが
+        // 別タスクに分かれて上記の流れが壊れる。
         val intents = resolved.reversed().map { component ->
             Intent(Intent.ACTION_SEND).apply {
                 type = "text/plain"
