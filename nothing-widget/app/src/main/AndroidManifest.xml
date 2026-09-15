@@ -19,7 +19,8 @@
 
         <activity
             android:name=".AiLogViewActivity"
-            android:exported="false" />
+            android:exported="false"
+            android:theme="@style/Theme.QuickMemo" />
 
         <receiver
             android:name=".NothingWidgetReceiver"
