@@ -7,7 +7,7 @@ import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.FileProvider
 
-/** 蓄積したAIログ(ai_log.md)を表示し、必要な時だけ外部アプリへ共有できる画面。 */
+/** 蓄積したAIログ(ai_log.md)を表示し、必要な時だけ外部アプリへ共有できる画面。共有すると本体はクリアされる。 */
 class AiLogViewActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -16,18 +16,25 @@ class AiLogViewActivity : AppCompatActivity() {
         val logText = findViewById<TextView>(R.id.log_text)
         val shareButton = findViewById<ImageButton>(R.id.share_log_button)
 
-        logText.text = AiLogStore.readAll(this).ifBlank { "まだ何も追記されていません" }
+        fun refresh() {
+            logText.text = AiLogStore.readAll(this).ifBlank { "まだ何も追記されていません" }
+        }
+        refresh()
 
         shareButton.setOnClickListener {
-            val file = AiLogStore.file(this)
-            if (!file.exists()) return@setOnClickListener
-            val uri = FileProvider.getUriForFile(this, "$packageName.fileprovider", file)
+            if (AiLogStore.readAll(this).isBlank()) return@setOnClickListener
+
+            val exportFile = AiLogStore.exportCopy(this)
+            val uri = FileProvider.getUriForFile(this, "$packageName.fileprovider", exportFile)
             val sendIntent = Intent(Intent.ACTION_SEND).apply {
                 type = "text/plain"
                 putExtra(Intent.EXTRA_STREAM, uri)
                 addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             }
             startActivity(Intent.createChooser(sendIntent, null))
+
+            AiLogStore.clear(this)
+            refresh()
         }
     }
 }

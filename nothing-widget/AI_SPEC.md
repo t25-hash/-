@@ -18,14 +18,14 @@ Discord Webhook直接投稿・カスタムドットフォントは試作した�
   - `share_button`タップ: (1)テキストが前回保存時から変わっていれば`MemoStore.addMemo`で保存 + `NothingWidget().updateAll(context)`でウィジェットに即反映 (2)`Intent.ACTION_SEND`を`Intent.createChooser`で開く (3)**`finish()`しない**(複数宛先へ続けて共有できるように)。
   - `bulk_send_button`タップ: `TargetAppStore.SLOT_LABELS`(Perplexity/Genspark/DeepSeek/Grok/Gemini/ChatGPT/Claude/Copilot/Meta AI/Poe/Qwen/Kimi、計12個)のチェックリストダイアログを表示。チェックした分だけ`sendToSlot()`を順に呼ぶ。
   - `view_log_button`タップ: `AiLogViewActivity`を開く。
-  - **ホーム画面ウィジェット自体はテキスト入力欄を持てない**(RemoteViews/Glance共通の制約)ため、この画面が唇一の入力経路。ウィジェットの再描画も別プロセスのため、保存だけでは反映されず`GlanceAppWidget.updateAll()`(suspend)を明示的に呼ぶ必要がある。
+  - **ホーム画面ウィジェット自体はテキスト入力欄を持てない**(RemoteViews/Glance共通の制約)ため、この画面が唯一の入力経路。ウィジェットの再描画も別プロセスのため、保存だけでは反映されず`GlanceAppWidget.updateAll()`(suspend)を明示的に呼ぶ必要がある。
 - `MemoStore`: 書いたメモをSharedPreferences(JSON配列、`text` + `created_at`)に保存する。`lastText()`が直近のメモを返す(ウィジェット表示・下書き復元に使用)。
 - `TargetAppStore`: 「一括送信」の送信先(`SLOT_LABELS`、現在12個)をラベル→`ComponentName`(package+class)で記憶する。**パッケージ名を決め打ちしない**(不確実で壊れやすいため)。候補を増やす場合は`SLOT_LABELS`にラベル文字列を足すだけでよい(初回選択・記憶方式なので、パッケージ名の調査は不要)。
 - `ChosenComponentReceiver`: `Intent.createChooser(..., pendingIntent.intentSender)`のコールバックを受け、選ばれたアプリの`ComponentName`を`TargetAppStore`に保存するだけの`BroadcastReceiver`(`exported=false`、内部利用のみ)。
 - `QuickMemoActivity.sendToSlot(label, text)`: 登録済みならその`ComponentName`へ`ACTION_SEND`を直接`startActivity`。未登録(または登録先が見つからない=アンインストール済み)なら、`ChosenComponentReceiver`宛のPendingIntent(`FLAG_MUTABLE`必須)付きで`Intent.createChooser`を開き、選ばれたアプリを記憶しつつ実際にそのアプリへも送る(1アクションで「送る」と「覚える」を両立)。
-- `AiLogStore`: 他アプリから共有されたテキストを`filesDir/ai_log.md`に`## yyyy-MM-dd HH:mm`見出し付きで**追記のみ**(上書きしない)で保存する。アプリ専用の内部ストレージなので他アプリ・他ユーザーからは直接見えない。
-- `AiLogViewActivity`: `ai_log.md`の内容をそのまま(Markdownのソースとして)スクロール表示するだけの読み取り画面。`AppCompatActivity`なので`android:theme`に`Theme.AppCompat`系(ここでは`Theme.QuickMemo`を流用)が必須 — 付け忘れると起動時に必ずクラッシュする。右上の共有アイコンから`FileProvider`経由でファイルそのものを`ACTION_SEND`で外部に共有できる(Obsidianに送る、メールする等、必要な時だけ)。
-- `res/xml/file_paths.xml` + `AndroidManifest.xml`の`FileProvider`宣言(`${applicationId}.fileprovider`): `filesDir`配下をエクスポートする設定。実際にURIを発行するのは`ai_log.md`のみ。
+- `AiLogStore`: 他アプリから共有されたテキストを`filesDir/ai_log.md`に`## yyyy-MM-dd HH:mm`見出し付きで**追記のみ**(上書きしない)で保存する。アプリ専用の内部ストレージなので他アプリ・他ユーザーからは直接見えない。`clear()`で本体を空にでき、`exportCopy()`で共有時点の内容を`filesDir/export/ai_log.md`へ複製する。
+- `AiLogViewActivity`: `ai_log.md`の内容をそのまま(Markdownのソースとして)スクロール表示するだけの画面。`AppCompatActivity`なので`android:theme`に`Theme.AppCompat`系(ここでは`Theme.QuickMemo`を流用)が必須 — 付け忘れると起動時に必ずクラッシュする。右上の共有アイコンをタップすると、(1)`AiLogStore.exportCopy()`で複製を作り、(2)その複製を`FileProvider`経由で`ACTION_SEND`共有し(Obsidianに送る、メールする等)、(3)**直後に本体(`ai_log.md`)をクリアして**表示も空の状態に更新する。元ファイルではなく複製を共有するのは、共有シート側が後からファイルを読みに来ても(ユーザーが送信を押すまでのタイムラグがあっても)クリア済みの空ファイルを掴まないようにするため。手動でログを消す手段(アプリ内クリアボタン等)は用意していない — エクスポート操作自体がクリアを兼ねる設計。
+- `res/xml/file_paths.xml` + `AndroidManifest.xml`の`FileProvider`宣言(`${applicationId}.fileprovider`): `filesDir`配下(`export/`サブディレクトリ含む)をエクスポートする設定。
 - `res/layout/widget_nothing.xml` は Glance の描画が読み込まれる前の一瞬だけ表示されるプレースホルダ(`widget_info.xml`の`initialLayout`)。実際の表示は全て `Content()` 側で書く。
 
 ## 意図的にやらないこと
@@ -34,7 +34,7 @@ Discord Webhook直接投稿・カスタムドットフォントは試作した�
 - **バックグラウンドでのクリップボード監視はしない**(Android 10以降、フォアグラウンドでないアプリはクリップボードを読めない制約があるため、原理的に不可能)。「コピーするたび自動記録」の代わりに、共有(ACTION_SEND)経由で受け取る方式にしている。
 - 「共有」「一括送信」のたびに保存が重複しないよう、同一テキストの連続操作では2回目以降`MemoStore.addMemo`を呼ばない(直前保存済みテキストと比較)。AIログ側(`AiLogStore`)は逐次追記の性質上、重複排除はしていない。
 - 画面を常時ボタンだらけにしない。閉じるボタンは常設せず、戻る操作に任せる。
-- **他アプリへの送信を裏側で自動完了させることはできない**(Androidの仕様上の制約)。「一括送信」は各アプリの画面を順番に開くところまでで、そのアプリ内で送信を押すのはユーザー自身。
+- **他アプリへの送信を裏側で自動完了させることはできない**(Androidの仕様上の制約)。「一括送信」は各アプリの画面を順番に開くところまでで、そのアプリ内で送信を押すのはユーザー自身。同様に、AIログのエクスポート共有も相手アプリでの送信完了は検知できないため、送信ボタンを押した時点(チューザー起動直後)でクリアする近似的な挙動にしている。
 - AIログ(`ai_log.md`)はデフォルトで外部から見えない場所に置く(ユーザーの選択)。共有可能な場所(Documents/Download等)に変更する場合は明示的な指示を待つこと。
 - Discord Webhook直接投稿・カスタムドットフォント(`WebhookStore`/`DiscordWebhookPoster`/`ndot_47`等)は試作後に削除済み。再度追加する場合は明示的な指示を待つこと。
 - `AppCompatActivity`を新設する時は必ず`android:theme`に`Theme.AppCompat`系を指定すること(`AiLogViewActivity`のクラッシュの原因になった)。
@@ -56,7 +56,6 @@ Discord Webhook直接投稿・カスタムドットフォントは試作した�
 `git push` すると `.github/workflows/build.yml` が `nothing-widget/` 配下の変更を検知して `gradle assembleDebug` を実行し、`app-debug.apk` をartifactとしてアップロードする。ビルドが通ることを変更の完了条件にする。
 
 ## 次にやること(未着手)
-- 実機での動作確認(`SLOT_LABELS`の各アプリが実際にACTION_SEND(text/plain)を受け取れるか、一括送信で各アプリを順に開いた時の戻り挙動、AIログ共有先アプリの選択画面でNothing Widgetが正しく候補に出るか)
+- 実機での動作確認(`SLOT_LABELS`の各アプリが実際にACTION_SEND(text/plain)を受け取れるか、一括送信で各アプリを順に開いた時の戻り挙動、AIログ共有先アプリの選択画面でNothing Widgetが正しく候補に出るか、エクスポート直後のクリアが実際の送信完了より早すぎて困らないか)
 - 保存したメモの閲覧・削除UI(今は保存するだけで、見返す手段が無い)
 - TargetAppStoreに登録したアプリを確認/登録し直すUI(今は「登録済みアプリが見つからない」場合しか選び直しが起きない)
-- AiLogViewActivityにも削除/クリア機能は無い(現状は追記のみ、増え続ける前提)
