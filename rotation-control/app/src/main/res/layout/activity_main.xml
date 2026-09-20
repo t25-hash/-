@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="center"
+    android:padding="24dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="画面を縦に固定"
+        android:textSize="20sp"
+        android:layout_marginBottom="16dp" />
+
+    <Switch
+        android:id="@+id/force_portrait_switch"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:text="ONにすると、他のアプリが横画面固定でも縦で開くようになります。初回は「他のアプリの上に表示」の許可が必要です。アスペクト比は変わりません(対象アプリ自体が縦用レイアウトで再描画します)。通知の「解除」からも終了できます。"
+        android:textSize="13sp"
+        android:gravity="center" />
+
+</LinearLayout>
